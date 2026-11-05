@@ -380,6 +380,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   topicName: /aruco/pose/robo2
   followSpeed: 15
+  rotation: 0
 --- !u!114 &46730254
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2488,6 +2489,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   topicName: /aruco/pose/robo1
   followSpeed: 15
+  rotation: 0
 --- !u!114 &656535189
 MonoBehaviour:
   m_ObjectHideFlags: 0
