@@ -15,15 +15,25 @@ public class TrailDrawer : MonoBehaviour
 
     private MeshMaker currentMesh;
     private List<GameObject> createdTrails = new List<GameObject>();
-    private static int globalSortingOrder = 0;
+    private static int globalSortingOrder = 20;
     private Coroutine writeCoroutine;
     private bool isWriting = false;
 
     void Start() { }
 
+    void Update()
+    {
+        // Stop an active stroke as soon as play mode ends.
+        if (GameManager.Instance != null && !GameManager.Instance.IsPlay && isWriting)
+            StopWriting();
+    }
+
     // ボタンから呼ばれる
     public void AccessedFromPaintButton()
     {
+        if (GameManager.Instance == null || !GameManager.Instance.IsPlay)
+            return;
+
         bool wasWriting = isWriting;
         MeshMaker prevMesh = currentMesh;
 
@@ -59,6 +69,23 @@ public class TrailDrawer : MonoBehaviour
         writeCoroutine = StartCoroutine(WriteTrail());
     }
 
+    void StopWriting()
+    {
+        if (writeCoroutine != null)
+        {
+            StopCoroutine(writeCoroutine);
+            writeCoroutine = null;
+        }
+
+        if (currentMesh != null)
+        {
+            Destroy(currentMesh);
+            currentMesh = null;
+        }
+
+        isWriting = false;
+    }
+
     /// <summary>
     /// 新規メッシュセグメントを生成して currentMesh にセット。
     /// startWidth &lt; 0 の場合はプレハブのデフォルト幅を使用。
@@ -85,6 +112,9 @@ public class TrailDrawer : MonoBehaviour
             currentMesh.Initialize();
         }
         currentMesh.SetSortingOrder(globalSortingOrder++);
+        MeshRenderer trailRenderer = g.GetComponent<MeshRenderer>();
+        if (trailRenderer != null)
+            trailRenderer.sortingLayerName = "RoboTrail";
 
         // オーバーラップ点がある場合はそれらを先に追加（スムージング連続性確保）
         if (overlapPts != null && overlapPts.Count > 0)

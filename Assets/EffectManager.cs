@@ -17,12 +17,60 @@ public class EffectManager : MonoBehaviour
     [SerializeField] private float fadeInTime = 0.5f;
     [SerializeField] private float stayTime = 0.5f;
     [SerializeField] private float fadeOutTime = 0.5f;
+    [SerializeField] private GameObject TimerPref;
+    [SerializeField] private int TimerNum;
+    [SerializeField] private Color TimerTrueColor;
+    [SerializeField] private Color TimerFalseColor;
+    [SerializeField] private Vector3 TimerCenter;
+    GameObject[] Timer;
+    Image[] timerImages;
+
 
     private void Start()
     {
         Instance = this;
+        float angle;
+        Timer = new GameObject[TimerNum];
+        timerImages = new Image[TimerNum];
+        for (int i = 1; i <= TimerNum; i++)
+        {
+            angle = 360f / (float)TimerNum * i;
+            Timer[i - 1] = Instantiate(TimerPref, TimerCenter, Quaternion.Euler(0, 0, angle));
+            Timer[i - 1].transform.SetParent(this.gameObject.transform);
+            timerImages[i - 1] = Timer[i - 1].transform.GetChild(0).GetComponent<Image>();
+        }
         reset();
-        StartCoroutine(StartCount()); // テスト用呼び出し
+    }
+
+    public IEnumerator UpdateTimerEffect()
+    {
+        while (GameManager.Instance.IsPlay)
+        {
+            if (TimerNum > 0 && GameManager.Instance.LimitTime > 0)
+            {
+                float segmentDuration = (float)GameManager.Instance.LimitTime / TimerNum;
+                int falseCount = Mathf.Clamp(Mathf.FloorToInt(GameManager.Instance.elapsedTime / segmentDuration), 0, Timer.Length);
+                for (int i = 0; i < Timer.Length; i++)
+                {
+                    if (i >= timerImages.Length || timerImages[i] == null)
+                        continue;
+
+                    Color targetColor = i < falseCount ? TimerFalseColor : TimerTrueColor;
+                    if (timerImages[i].color != targetColor)
+                        timerImages[i].color = targetColor;
+                }
+            }
+            yield return null;
+        }
+
+        for (int i = 0; i < Timer.Length; i++)
+        {
+            if (i >= timerImages.Length || timerImages[i] == null)
+                continue;
+
+            if (timerImages[i].color != TimerFalseColor)
+                timerImages[i].color = TimerFalseColor;
+        }
     }
 
     public void reset()
@@ -49,12 +97,20 @@ public class EffectManager : MonoBehaviour
     {
         yield return StartCoroutine(CountSequence());
         yield return StartCoroutine(CountEffect(StartObj));
+        StartCoroutine(GameManager.Instance.TimerStart());
     }
 
     public IEnumerator FinishCount()
     {
         yield return StartCoroutine(CountSequence());
         yield return StartCoroutine(CountEffect(FinishObj));
+
+        GameManager gameManager = GameManager.Instance;
+        while (gameManager != null && !gameManager.IsJudgeComplete)
+            yield return null;
+
+        if (gameManager != null)
+            WinnerEffect(gameManager.WinnerIndex < 0 ? 2 : gameManager.WinnerIndex);
     }
 
     private IEnumerator CountSequence()

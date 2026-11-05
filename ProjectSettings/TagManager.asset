@@ -41,6 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Field
+    uniqueID: 2664071463
+    locked: 0
+  - name: RoboTrail
+    uniqueID: 421878221
+    locked: 0
+  - name: Robo
+    uniqueID: 1349166961
+    locked: 0
   - name: Effect
     uniqueID: 546688805
     locked: 0
