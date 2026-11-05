@@ -33,6 +33,7 @@ public class ButtonManager : MonoBehaviour
     {
         EffectManager.Instance.reset();
         GameManager.Instance.ResetRobotTrails();
+        GameManager.Instance.reset();
     }
 
     public void OnLimitTimeChangeButtonClicked(int t)
