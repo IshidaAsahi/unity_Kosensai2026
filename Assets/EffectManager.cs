@@ -102,7 +102,6 @@ public class EffectManager : MonoBehaviour
 
     public IEnumerator FinishCount()
     {
-        yield return StartCoroutine(CountSequence());
         yield return StartCoroutine(CountEffect(FinishObj));
 
         GameManager gameManager = GameManager.Instance;
