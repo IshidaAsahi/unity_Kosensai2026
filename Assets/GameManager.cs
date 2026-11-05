@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] bool isPlay;
     public bool IsPlay => isPlay;
     public bool IsJudgeComplete { get; private set; }
-    public int WinnerIndex { get; private set; } = -1;
+    public float[] RobotPercentages { get; private set; } = new float[0];//塗った割合
     public string JudgeResult { get; private set; }
     [SerializeField, Min(1)] int judgeWorkPerFrame = 20000;
     Coroutine judgeCoroutine;
@@ -183,7 +183,7 @@ public class GameManager : MonoBehaviour
     {
         if (judgeCoroutine != null) StopCoroutine(judgeCoroutine);
         IsJudgeComplete = false;
-        WinnerIndex = -1;
+        RobotPercentages = new float[robots.Length];
         JudgeResult = null;
         judgeCoroutine = StartCoroutine(JudgeRoutine());
     }
@@ -286,36 +286,18 @@ public class GameManager : MonoBehaviour
             if (++work >= judgeWorkPerFrame) { work = 0; yield return null; }
         }
 
-        // 6. 結果出力（割合表示 + 最多判定）
-        int maxCount = 0;
-        int winnerIdx = -1;
-        bool tie = false;
-        for (int r = 0; r < robots.Length; r++)
-        {
-            if (counts[r] > maxCount)
-            {
-                maxCount = counts[r];
-                winnerIdx = r;
-                tie = false;
-            }
-            else if (counts[r] == maxCount && maxCount > 0)
-            {
-                tie = true;
-            }
-        }
-
+        // Store each robot's field percentage for effects and future UI.
         string result = "";
         for (int r = 0; r < robots.Length; r++)
         {
             float pct = totalCells > 0 ? (float)counts[r] / totalCells * 100f : 0f;
+            RobotPercentages[r] = pct;
             result += $"{robots[r].name}: {pct:F1}%  ";
         }
 
-        string label = (tie || winnerIdx < 0) ? "同じ" : $"{robots[winnerIdx].name}の方が多い";
-        WinnerIndex = (tie || winnerIdx < 0) ? -1 : winnerIdx;
-        JudgeResult = $"{result} → {label}";
+        JudgeResult = result;
         CompleteJudge();
-        Debug.Log($"[Judge] {result}→ {label}");
+        Debug.Log($"[Judge] {result}");
     }
 
     void CompleteJudge()
@@ -429,3 +411,4 @@ public class GameManager : MonoBehaviour
     }
 
 }
+

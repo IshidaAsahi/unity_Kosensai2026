@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -109,7 +109,26 @@ public class EffectManager : MonoBehaviour
             yield return null;
 
         if (gameManager != null)
-            WinnerEffect(gameManager.WinnerIndex < 0 ? 2 : gameManager.WinnerIndex);
+        {
+            float[] percentages = gameManager.RobotPercentages;
+            int winnerIndex = -1;
+            float maxPercentage = 0f;
+            bool tie = false;
+            for (int i = 0; i < percentages.Length; i++)
+            {
+                if (percentages[i] > maxPercentage)
+                {
+                    maxPercentage = percentages[i];
+                    winnerIndex = i;
+                    tie = false;
+                }
+                else if (percentages[i] == maxPercentage && maxPercentage > 0f)
+                {
+                    tie = true;
+                }
+            }
+            WinnerEffect(tie || winnerIndex < 0 ? 2 : winnerIndex);
+        }
     }
 
     private IEnumerator CountSequence()
@@ -175,3 +194,4 @@ public class EffectManager : MonoBehaviour
         }
     }
 }
+
