@@ -10,6 +10,7 @@ public class EffectManager : MonoBehaviour
     [SerializeField] private float winnerStartScale = 5f;
     [SerializeField] private float winnerStayScale = 0.3f;
     [SerializeField] private float winnerNextObjectDelay = 0.2f;
+    [SerializeField] private float winnerDisplayTime = 3f;
 
     [Header("カウントダウン")]
     [SerializeField] private GameObject[] Count3;
@@ -204,6 +205,9 @@ public class EffectManager : MonoBehaviour
             if (i < targetObject.transform.childCount - 1)
                 yield return new WaitForSeconds(winnerNextObjectDelay);
         }
+
+        yield return new WaitForSeconds(winnerDisplayTime);
+        targetObject.SetActive(false);
     }
 
     private IEnumerator FadeInWinnerObject(GameObject targetObject)
