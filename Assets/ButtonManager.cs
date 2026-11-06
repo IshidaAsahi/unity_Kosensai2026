@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Robotics.ROSTCPConnector;
+using RosMessageTypes.Std;
 
 [System.Serializable]
 public class RoboEntry
@@ -13,9 +15,33 @@ public class RoboEntry
 public class ButtonManager : MonoBehaviour
 {
 
+    // ROS2のトピック名
+    string[] topicNames;
+
+    void Start()
+    {
+        ros = ROSConnection.GetOrCreateInstance();
+
+        topicNames = new string[robots.Length];
+
+        for (int i = 0; i < robots.Length; i++)
+        {
+            topicNames[i] = "/button" + (i + 1);
+
+            ros.RegisterPublisher<BoolMsg>(topicNames[i]);
+        }
+    }
+
+    void PublishButtonData(int index)
+    {
+        BoolMsg msg = new BoolMsg(true);
+        ros.Publish(topicNames[index], msg);
+    }
+
     public void PaintRobot(int index)
     {
         GameManager.Instance.PaintRobot(index);
+        PublishButtonData(index);
     }
 
     public void OnStartButtonClicked()
