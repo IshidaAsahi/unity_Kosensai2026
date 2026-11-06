@@ -14,7 +14,14 @@ public class RoboEntry
 [ExecuteAlways]
 public class ButtonManager : MonoBehaviour
 {
+    [SerializeField]
+    RoboEntry[] robots = new RoboEntry[]
+    {
+        new RoboEntry { name = "ロボ1" },
+        new RoboEntry { name = "ロボ2" }
+    };
 
+    ROSConnection ros;
     // ROS2のトピック名
     string[] topicNames;
 
