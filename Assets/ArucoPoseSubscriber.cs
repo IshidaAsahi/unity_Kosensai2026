@@ -9,11 +9,11 @@ public enum Rotation
 
 public class ArucoPoseSubscriber : MonoBehaviour
 {
-
     public string topicName;
 
     // 単位：1秒あたりの追従率
     public float followSpeed = 15.0f;
+    [SerializeField] float sizeOffset;
     [SerializeField] Rotation rotation;
 
     private Vector3 targetPosition;
@@ -28,8 +28,8 @@ public class ArucoPoseSubscriber : MonoBehaviour
 
     void PoseCallback(PoseStampedMsg msg)
     {
-        float x = (float)msg.pose.position.x;
-        float y = (float)msg.pose.position.y;
+        float x = (float)msg.pose.position.x * sizeOffset;
+        float y = (float)msg.pose.position.y * sizeOffset;
         Vector3 v;
         switch (rotation)
         {
