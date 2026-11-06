@@ -9,9 +9,11 @@ public class EffectManager : MonoBehaviour
     [SerializeField] private GameObject[] WinnerObj;
 
     [Header("カウントダウン")]
-    [SerializeField] private GameObject[] Count;
-    [SerializeField] private GameObject StartObj;
-    [SerializeField] private GameObject FinishObj;
+    [SerializeField] private GameObject[] Count3;
+    [SerializeField] private GameObject[] Count2;
+    [SerializeField] private GameObject[] Count1;
+    [SerializeField] private GameObject[] StartObj;
+    [SerializeField] private GameObject[] FinishObj;
     [SerializeField] private float startScale = 5f;
     [SerializeField] private float stayScale = 0.3f;
     [SerializeField] private float fadeInTime = 0.5f;
@@ -79,12 +81,14 @@ public class EffectManager : MonoBehaviour
         {
             WinnerObj[i].SetActive(false);
         }
-        for (int i = 0; i < Count.Length; i++)
+        for (int i = 0; i < 2; i++)
         {
-            Count[i].SetActive(false);
+            Count3[i].SetActive(false);
+            Count2[i].SetActive(false);
+            Count1[i].SetActive(false);
+            StartObj[i].SetActive(false);
+            FinishObj[i].SetActive(false);
         }
-        StartObj.SetActive(false);
-        FinishObj.SetActive(false);
     }
 
 
@@ -96,13 +100,15 @@ public class EffectManager : MonoBehaviour
     public IEnumerator StartCount()
     {
         yield return StartCoroutine(CountSequence());
-        yield return StartCoroutine(CountEffect(StartObj));
+        StartCoroutine(CountEffect(StartObj[0]));
+        yield return StartCoroutine(CountEffect(StartObj[1]));
         StartCoroutine(GameManager.Instance.TimerStart());
     }
 
     public IEnumerator FinishCount()
     {
-        yield return StartCoroutine(CountEffect(FinishObj));
+        StartCoroutine(CountEffect(FinishObj[0]));
+        yield return StartCoroutine(CountEffect(FinishObj[1]));
 
         GameManager gameManager = GameManager.Instance;
         while (gameManager != null && !gameManager.IsJudgeComplete)
@@ -133,10 +139,13 @@ public class EffectManager : MonoBehaviour
 
     private IEnumerator CountSequence()
     {
-        for (int i = 0; i < Count.Length; i++)
-        {
-            yield return StartCoroutine(CountEffect(Count[i]));
-        }
+        StartCoroutine(CountEffect(Count3[0]));
+        yield return StartCoroutine(CountEffect(Count3[1]));
+        StartCoroutine(CountEffect(Count2[0]));
+        yield return StartCoroutine(CountEffect(Count2[1]));
+        StartCoroutine(CountEffect(Count1[0]));
+        yield return StartCoroutine(CountEffect(Count1[1]));
+
     }
 
     private IEnumerator CountEffect(GameObject targetObject)

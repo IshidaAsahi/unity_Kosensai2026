@@ -38,7 +38,16 @@ public class MeshMaker : MonoBehaviour
             meshRenderer = gameObject.AddComponent<MeshRenderer>();
 
         if (trailMaterial != null)
+        {
+            // Trails overlap in the same plane, so depth writes make the first
+            // opaque material drawn hide every later trail regardless of its
+            // sorting order. Keep the color opaque, but use the transparent
+            // queue (and disable depth writes) so Renderer.sortingOrder wins.
             meshRenderer.material = trailMaterial;
+            meshRenderer.material.renderQueue = 3000;
+            if (meshRenderer.material.HasProperty("_ZWrite"))
+                meshRenderer.material.SetInt("_ZWrite", 0);
+        }
 
         mesh = new Mesh();
         mesh.name = gameObject.name + "_trailMesh";
