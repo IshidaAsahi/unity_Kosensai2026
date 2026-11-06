@@ -89,7 +89,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trailMaterial: {fileID: 0}
-  width: 1
+  width: 1.5
   useStartCap: 1
   smoothingIterations: 3
 --- !u!33 &5752352497156037562

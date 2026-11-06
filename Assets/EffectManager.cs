@@ -7,6 +7,9 @@ public class EffectManager : MonoBehaviour
     public static EffectManager Instance;
     [Header("勝敗")]
     [SerializeField] private GameObject[] WinnerObj;
+    [SerializeField] private float winnerStartScale = 5f;
+    [SerializeField] private float winnerStayScale = 0.3f;
+    [SerializeField] private float winnerNextObjectDelay = 0.2f;
 
     [Header("カウントダウン")]
     [SerializeField] private GameObject[] Count3;
@@ -32,6 +35,16 @@ public class EffectManager : MonoBehaviour
     [SerializeField] private Vector3 TimerCenter;
     GameObject[] Timer;
     Image[] timerImages;
+
+    [SerializeField] GameObject[] GorlCircle;
+    [SerializeField] Vector2[] circleCenterPos;
+    [SerializeField] float circleTime;
+    [SerializeField] float circleSpeed;
+    [SerializeField, Min(1)] int gageGrid = 1;
+    [SerializeField] GameObject[] Gage;
+    [SerializeField] GameObject QuestionGage;
+    [SerializeField] GameObject nowJudge;
+    [SerializeField] GameObject[] JudgeBack;
 
 
     private void Start()
@@ -83,6 +96,8 @@ public class EffectManager : MonoBehaviour
 
     public void reset()
     {
+        if (QuestionGage != null)
+            QuestionGage.SetActive(false);
         for (int i = 0; i < WinnerObj.Length; i++)
         {
             WinnerObj[i].SetActive(false);
@@ -94,6 +109,7 @@ public class EffectManager : MonoBehaviour
             Count1[i].SetActive(false);
             StartObj[i].SetActive(false);
             FinishObj[i].SetActive(false);
+            JudgeBack[i].SetActive(false);
         }
         for (int i = 0; i < FinishTopLine.Length; i++)
         {
@@ -103,12 +119,116 @@ public class EffectManager : MonoBehaviour
         {
             FinishUnderLine[i].SetActive(false);
         }
+        nowJudge.SetActive(false);
+    }
+
+    public IEnumerator GorlEffect(int i)
+    {
+        GameObject g = Instantiate(GorlCircle[i], circleCenterPos[i], Quaternion.identity);
+        g.transform.SetParent(this.gameObject.transform);
+        float StartTime = Time.time;
+        while (Time.time - StartTime < circleTime)
+        {
+            Vector3 v = g.transform.localScale;
+            g.transform.localScale = v + new Vector3(circleSpeed, circleSpeed, 0);
+            yield return null;
+        }
+        Image a = g.GetComponent<Image>();
+        Image b = g.transform.GetChild(0).gameObject.GetComponent<Image>();
+        for (int j = 85; j >= 0; j--)
+        {
+            a.color = new Color(a.color.r, a.color.g, a.color.b, j / 255f);
+            b.color = new Color(b.color.r, b.color.g, b.color.b, j / 255f);
+            yield return null;
+        }
+        Destroy(g);
+
+    }
+
+    public IEnumerator GageEffect()
+    {
+        GameManager gameManager = GameManager.Instance;
+        if (gameManager == null)
+            yield break;
+
+        while (gameManager.IsPlay)
+        {
+            float remainingTime = gameManager.LimitTime - gameManager.elapsedTime;
+            if (remainingTime < 30f)
+            {
+                if (QuestionGage != null)
+                    QuestionGage.SetActive(true);
+            }
+
+            gameManager.Percent(gageGrid);
+            while (!gameManager.IsJudgeComplete && gameManager.IsPlay)
+                yield return null;
+
+            if (!gameManager.IsPlay)
+                yield break;
+
+            if (Gage == null)
+                yield break;
+
+            for (int i = 0; i < Gage.Length && i < gameManager.RobotPercentages.Length; i++)
+            {
+                if (Gage[i] == null)
+                    continue;
+
+                float scale = Mathf.Clamp01(gameManager.RobotPercentages[i] / 100f) * 1.5f;
+                Vector3 localScale = Gage[i].transform.localScale;
+                localScale.y = scale;
+                Gage[i].transform.localScale = localScale;
+            }
+
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 
 
     public void WinnerEffect(int i)
     {
-        WinnerObj[i].SetActive(true);
+        StartCoroutine(WinnerEffectCoroutine(WinnerObj[i]));
+    }
+
+    private IEnumerator WinnerEffectCoroutine(GameObject targetObject)
+    {
+        targetObject.SetActive(true);
+        for (int i = 0; i < targetObject.transform.childCount; i++)
+            targetObject.transform.GetChild(i).gameObject.SetActive(false);
+
+        for (int i = 0; i < targetObject.transform.childCount; i++)
+        {
+            yield return StartCoroutine(FadeInWinnerObject(targetObject.transform.GetChild(i).gameObject));
+
+            if (i < targetObject.transform.childCount - 1)
+                yield return new WaitForSeconds(winnerNextObjectDelay);
+        }
+    }
+
+    private IEnumerator FadeInWinnerObject(GameObject targetObject)
+    {
+        Vector3 startScaleVector = new Vector3(winnerStartScale, winnerStartScale, 1f);
+        Vector3 stayScaleVector = new Vector3(winnerStayScale, winnerStayScale, 1f);
+        targetObject.SetActive(true);
+        targetObject.transform.localScale = startScaleVector;
+
+        Graphic[] graphics = targetObject.GetComponentsInChildren<Graphic>(true);
+        SpriteRenderer[] spriteRenderers = targetObject.GetComponentsInChildren<SpriteRenderer>(true);
+        SetAlpha(graphics, spriteRenderers, 0f);
+
+        float elapsed = 0f;
+        while (elapsed < fadeInTime)
+        {
+            float progress = elapsed / fadeInTime;
+            targetObject.transform.localScale = Vector3.Lerp(startScaleVector, stayScaleVector, progress);
+            SetAlpha(graphics, spriteRenderers, progress);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        targetObject.transform.localScale = stayScaleVector;
+        SetAlpha(graphics, spriteRenderers, 1f);
     }
 
     public IEnumerator StartCount()
@@ -153,6 +273,26 @@ public class EffectManager : MonoBehaviour
         yield return StartCoroutine(FadeOutFinishObjects(g, finishObj));
     }
 
+    public IEnumerator Loading(GameManager gameManager)
+    {
+        nowJudge.SetActive(true);
+        JudgeBack[0].SetActive(true);
+        JudgeBack[1].SetActive(true);
+        for (; ; )
+        {
+            JudgeBack[0].transform.Rotate(0, 0, 10);
+            JudgeBack[1].transform.Rotate(0, 0, 10);
+            yield return null;
+            if (gameManager.IsJudgeComplete)
+            {
+                break;
+            }
+        }
+        nowJudge.SetActive(false);
+        JudgeBack[0].SetActive(false);
+        JudgeBack[1].SetActive(false);
+    }
+
     public IEnumerator FinishCount()
     {
         FinishObj[0].SetActive(true);
@@ -161,10 +301,9 @@ public class EffectManager : MonoBehaviour
         StartCoroutine(FinishLineMove(FinishTopLine[1], FinishObj[1], 1, 25));
         StartCoroutine(FinishLineMove(FinishUnderLine[0], FinishObj[1], -1, 25));
         yield return StartCoroutine(FinishLineMove(FinishUnderLine[1], FinishObj[1], -1, 25));
-
         GameManager gameManager = GameManager.Instance;
-        while (gameManager != null && !gameManager.IsJudgeComplete)
-            yield return null;
+        yield return StartCoroutine(Loading(gameManager));
+        QuestionGage.SetActive(false);
 
         if (gameManager != null)
         {
@@ -279,6 +418,23 @@ public class EffectManager : MonoBehaviour
             Color color = spriteRenderer.color;
             color.a = alpha;
             spriteRenderer.color = color;
+        }
+    }
+
+    private void SetAlpha(Graphic[] graphics, SpriteRenderer[] spriteRenderers, float alpha)
+    {
+        for (int i = 0; i < graphics.Length; i++)
+        {
+            Color color = graphics[i].color;
+            color.a = alpha;
+            graphics[i].color = color;
+        }
+
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            Color color = spriteRenderers[i].color;
+            color.a = alpha;
+            spriteRenderers[i].color = color;
         }
     }
 }

@@ -64,11 +64,20 @@ public class ButtonManager : MonoBehaviour
         OnResetButtonClicked();
         GameManager.Instance.ChangeState(true);
         StartCoroutine(EffectManager.Instance.StartCount());
+        StartCoroutine(EffectManager.Instance.GageEffect());
     }
 
     // 既存ボタン互換
-    public void OnPaintButton1Clicked() { PaintRobot(0); }
-    public void OnPaintButton2Clicked() { PaintRobot(1); }
+    public void OnPaintButton1Clicked()
+    {
+        PaintRobot(0);
+        StartCoroutine(EffectManager.Instance.GorlEffect(0));
+    }
+    public void OnPaintButton2Clicked()
+    {
+        PaintRobot(1);
+        StartCoroutine(EffectManager.Instance.GorlEffect(1));
+    }
 
     public void OnResetButtonClicked()
     {

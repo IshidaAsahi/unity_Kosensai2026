@@ -106,7 +106,7 @@ public class GameManager : MonoBehaviour
     {
         if (!isPlay) return;
         ChangeState(false);
-        Judge();
+        Percent(grid);
         if (EffectManager.Instance != null)
             StartCoroutine(EffectManager.Instance.FinishCount());
     }
@@ -179,31 +179,31 @@ public class GameManager : MonoBehaviour
             if (robot != null && robot.drawer != null) robot.drawer.ResetAllTrails();
     }
 
-    public void Judge()
+    public void Percent(int gridCount)
     {
         if (judgeCoroutine != null) StopCoroutine(judgeCoroutine);
         IsJudgeComplete = false;
         RobotPercentages = new float[robots.Length];
         JudgeResult = null;
-        judgeCoroutine = StartCoroutine(JudgeRoutine());
+        judgeCoroutine = StartCoroutine(JudgeRoutine(gridCount));
     }
 
-    IEnumerator JudgeRoutine()
+    IEnumerator JudgeRoutine(int gridCount)
     {
         if (Field == null)
         {
-            Debug.LogError("[Judge] GameManager または Field が設定されていません。");
+            Debug.LogError("[Percent] GameManager または Field が設定されていません。");
             CompleteJudge();
             yield break;
         }
         Transform field = Field;
-        long correction = Mathf.Max(1, grid);
+        long correction = Mathf.Max(1, gridCount);
         Vector2 fieldSizeInWorld = GetFieldHalfSize() * 2f;
         long verticalCountLong = Mathf.Max(1, Mathf.RoundToInt(fieldSizeInWorld.y)) * correction;
         long horizontalCountLong = Mathf.Max(1, Mathf.RoundToInt(fieldSizeInWorld.x)) * correction;
         if (verticalCountLong > int.MaxValue || horizontalCountLong > int.MaxValue)
         {
-            Debug.LogError("[Judge] 分割数が大きすぎます。");
+            Debug.LogError("[Percent] 分割数が大きすぎます。");
             CompleteJudge();
             yield break;
         }
@@ -212,7 +212,7 @@ public class GameManager : MonoBehaviour
         long totalCellCount = (long)verticalCount * horizontalCount;
         if (totalCellCount > int.MaxValue)
         {
-            Debug.LogError("[Judge] 分割数が大きすぎます。");
+            Debug.LogError("[Percent] 分割数が大きすぎます。");
             CompleteJudge();
             yield break;
         }
@@ -220,7 +220,7 @@ public class GameManager : MonoBehaviour
         Vector2 halfSize = GetFieldHalfSize();
         if (halfSize.x <= Mathf.Epsilon || halfSize.y <= Mathf.Epsilon)
         {
-            Debug.LogError("[Judge] フィールドのサイズは0より大きく設定してください。");
+            Debug.LogError("[Percent] フィールドのサイズは0より大きく設定してください。");
             CompleteJudge();
             yield break;
         }
@@ -297,7 +297,7 @@ public class GameManager : MonoBehaviour
 
         JudgeResult = result;
         CompleteJudge();
-        Debug.Log($"[Judge] {result}");
+        Debug.Log($"[Percent] {result}");
     }
 
     void CompleteJudge()
@@ -411,4 +411,3 @@ public class GameManager : MonoBehaviour
     }
 
 }
-
