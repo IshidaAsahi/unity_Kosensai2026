@@ -19,7 +19,12 @@ public class TrailDrawer : MonoBehaviour
     private Coroutine writeCoroutine;
     private bool isWriting = false;
 
-    void Start() { }
+    [SerializeField] GameObject ColorInk;
+
+    void Start()
+    {
+        ColorInk.SetActive(false);
+    }
 
     void Update()
     {
@@ -44,6 +49,7 @@ public class TrailDrawer : MonoBehaviour
             writeCoroutine = null;
             isWriting = false;
         }
+
 
         // 書き込み中に再押し → 前のメッシュを現在地まで延長し、オーバーラップ付きで継続
         if (wasWriting && prevMesh != null)
@@ -139,10 +145,11 @@ public class TrailDrawer : MonoBehaviour
         float startTime = Time.time;
         float initialWidth = currentMesh.width;
         float lastSegmentTime = Time.time;
-
+        ColorInk.SetActive(true);
         while (Time.time - startTime < writeDuration)
         {
             float elapsed = Time.time - startTime;
+            ColorInk.transform.localScale = new Vector3(1, (1 - elapsed / writeDuration) * 0.75f, 1);
             float currentWidth = Mathf.Max(0f, initialWidth - widthReduction * elapsed);
 
             if (currentWidth <= 0.001f) break;
@@ -181,11 +188,13 @@ public class TrailDrawer : MonoBehaviour
 
         isWriting = false;
         writeCoroutine = null;
+        ColorInk.SetActive(false);
     }
 
     // 全軌跡を削除
     public void ResetAllTrails()
     {
+        ColorInk.SetActive(false);
         if (writeCoroutine != null)
         {
             StopCoroutine(writeCoroutine);

@@ -14,6 +14,12 @@ public class EffectManager : MonoBehaviour
     [SerializeField] private GameObject[] Count1;
     [SerializeField] private GameObject[] StartObj;
     [SerializeField] private GameObject[] FinishObj;
+    [SerializeField] private GameObject[] FinishTopLine;
+    [SerializeField] private GameObject[] FinishUnderLine;
+    [SerializeField] private float LineSpeed;
+    [SerializeField] private float LineSlowSpeed;
+    [SerializeField] private float LineStayTime;
+
     [SerializeField] private float startScale = 5f;
     [SerializeField] private float stayScale = 0.3f;
     [SerializeField] private float fadeInTime = 0.5f;
@@ -89,6 +95,14 @@ public class EffectManager : MonoBehaviour
             StartObj[i].SetActive(false);
             FinishObj[i].SetActive(false);
         }
+        for (int i = 0; i < FinishTopLine.Length; i++)
+        {
+            FinishTopLine[i].SetActive(false);
+        }
+        for (int i = 0; i < FinishUnderLine.Length; i++)
+        {
+            FinishUnderLine[i].SetActive(false);
+        }
     }
 
 
@@ -105,10 +119,48 @@ public class EffectManager : MonoBehaviour
         StartCoroutine(GameManager.Instance.TimerStart());
     }
 
+    public IEnumerator FinishLineMove(GameObject g, GameObject finishObj, int angle, float pos)
+    {
+        g.SetActive(true);
+        Vector3 position = g.transform.position;
+        position.x = angle * pos;
+        g.transform.position = position;
+
+        float moveDistance = Mathf.Abs(LineSpeed);
+        while (moveDistance > 0f && !Mathf.Approximately(g.transform.position.x, 0f))
+        {
+            position = g.transform.position;
+            position.x = Mathf.MoveTowards(position.x, 0f, moveDistance * Time.deltaTime);
+            g.transform.position = position;
+            yield return null;
+        }
+        position = g.transform.position;
+        position.x = 0f;
+        g.transform.position = position;
+
+        float targetX = angle * pos * -1f;
+        float slowMoveDistance = Mathf.Abs(LineSlowSpeed);
+        float elapsed = 0f;
+        while (elapsed < LineStayTime)
+        {
+            position = g.transform.position;
+            position.x = Mathf.MoveTowards(position.x, targetX, slowMoveDistance * Time.deltaTime);
+            g.transform.position = position;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        yield return StartCoroutine(FadeOutFinishObjects(g, finishObj));
+    }
+
     public IEnumerator FinishCount()
     {
-        StartCoroutine(CountEffect(FinishObj[0]));
-        yield return StartCoroutine(CountEffect(FinishObj[1]));
+        FinishObj[0].SetActive(true);
+        FinishObj[1].SetActive(true);
+        StartCoroutine(FinishLineMove(FinishTopLine[0], FinishObj[0], 1, 25));
+        StartCoroutine(FinishLineMove(FinishTopLine[1], FinishObj[1], 1, 25));
+        StartCoroutine(FinishLineMove(FinishUnderLine[0], FinishObj[1], -1, 25));
+        yield return StartCoroutine(FinishLineMove(FinishUnderLine[1], FinishObj[1], -1, 25));
 
         GameManager gameManager = GameManager.Instance;
         while (gameManager != null && !gameManager.IsJudgeComplete)
@@ -133,8 +185,35 @@ public class EffectManager : MonoBehaviour
                     tie = true;
                 }
             }
+
             WinnerEffect(tie || winnerIndex < 0 ? 2 : winnerIndex);
         }
+    }
+
+    private IEnumerator FadeOutFinishObjects(GameObject finishLine, GameObject finishObj)
+    {
+        finishObj.SetActive(true);
+
+        Graphic finishLineGraphic = finishLine.GetComponent<Graphic>();
+        SpriteRenderer finishLineSpriteRenderer = finishLine.GetComponent<SpriteRenderer>();
+        Graphic finishObjGraphic = finishObj.GetComponent<Graphic>();
+        SpriteRenderer finishObjSpriteRenderer = finishObj.GetComponent<SpriteRenderer>();
+        SetAlpha(finishLineGraphic, finishLineSpriteRenderer, 1f);
+        SetAlpha(finishObjGraphic, finishObjSpriteRenderer, 1f);
+        float elapsed = 0f;
+        while (elapsed < fadeOutTime)
+        {
+            float alpha = 1f - elapsed / fadeOutTime;
+            SetAlpha(finishLineGraphic, finishLineSpriteRenderer, alpha);
+            SetAlpha(finishObjGraphic, finishObjSpriteRenderer, alpha);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        SetAlpha(finishLineGraphic, finishLineSpriteRenderer, 0f);
+        SetAlpha(finishObjGraphic, finishObjSpriteRenderer, 0f);
+        finishLine.SetActive(false);
+        finishObj.SetActive(false);
     }
 
     private IEnumerator CountSequence()
@@ -203,4 +282,3 @@ public class EffectManager : MonoBehaviour
         }
     }
 }
-

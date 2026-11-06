@@ -210,8 +210,11 @@ public class MeshMaker : MonoBehaviour
             float u2 = (float)i / Mathf.Max(1, n - 1);
             uvs.Add(new Vector2(u2, 0f));
             uvs.Add(new Vector2(u2, 1f));
-            norms.Add(Vector3.forward);
-            norms.Add(Vector3.forward);
+            // The robot body uses Unity's Quad front face, which points toward
+            // -Z. Match that normal so the shared material receives the same
+            // lighting on the robot and its trail.
+            norms.Add(Vector3.back);
+            norms.Add(Vector3.back);
 
             if (i > 0)
             {
@@ -231,7 +234,7 @@ public class MeshMaker : MonoBehaviour
             verts.Add(pts[0] - dir0 * (w0 * 0.5f) + norm0 * (w0 * 0.5f));
             verts.Add(pts[0] - dir0 * (w0 * 0.5f) - norm0 * (w0 * 0.5f));
             uvs.Add(new Vector2(0f, 0f)); uvs.Add(new Vector2(0f, 1f));
-            norms.Add(Vector3.forward);   norms.Add(Vector3.forward);
+            norms.Add(Vector3.back);      norms.Add(Vector3.back);
             tris.Add(ci); tris.Add(0); tris.Add(ci + 1);
             tris.Add(ci + 1); tris.Add(0); tris.Add(1);
         }
