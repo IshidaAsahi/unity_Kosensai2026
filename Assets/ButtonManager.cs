@@ -37,12 +37,20 @@ public class ButtonManager : MonoBehaviour
 
             ros.RegisterPublisher<BoolMsg>(topicNames[i]);
         }
+
+        ros.RegisterPublisher<BoolMsg>("/reset");
     }
 
     void PublishButtonData(int index)
     {
         BoolMsg msg = new BoolMsg(true);
         ros.Publish(topicNames[index], msg);
+    }
+
+    void PublishResetData()
+    {
+        BoolMsg msg = new BoolMsg(true);
+        ros.Publish("/reset", msg);
     }
 
     public void PaintRobot(int index)
@@ -67,6 +75,8 @@ public class ButtonManager : MonoBehaviour
         EffectManager.Instance.reset();
         GameManager.Instance.ResetRobotTrails();
         GameManager.Instance.reset();
+
+        PublishResetData();
     }
 
     public void OnLimitTimeChangeButtonClicked(int t)
